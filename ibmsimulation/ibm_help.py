@@ -46,7 +46,22 @@ def write_ibmdata(LatticeObj):
         for x in data_toWrite:
             mywriter.writerow(x)
     
-    
-    
+
+
+def bin2list(some_int):
+    '''
+    Description: Take an integer number in Python string format and convert to binary and then to a numpy array of numbers. 
+    And also return the complement of that binary number
+    :param some_int: an integer to convert to binary
+    :type some_int: an integer
+    :returns: a 2 x m numpy array 
+    '''
+    out_array = np.array([[],[]])
+    as_bin = bin(some_int)[2:len(bin(some_int))]
+    bin_comp = bin(np.uint32(~ some_int))[(len(bin(np.uint32(~ some_int)))-len(as_bin)):len(bin(np.uint32(~ some_int)))]
+    for i in range(len(as_bin)):
+        np.append(out_array[0,],int(as_bin[i]))
+        
+
 
 

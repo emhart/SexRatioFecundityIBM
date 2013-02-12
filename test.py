@@ -13,6 +13,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from ibmsimulation import ibm_help as ih
 
+#Code profiling...
+
+
+
 ID_stack = range(1000000)
 ID_stack.reverse()
 
