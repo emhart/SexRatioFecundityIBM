@@ -56,12 +56,16 @@ def bin2list(some_int):
     :type some_int: an integer
     :returns: a 2 x m numpy array 
     '''
-    out_array = np.array([[],[]])
+    out_array1 = []
+    out_array2 = []
     as_bin = bin(some_int)[2:len(bin(some_int))]
     bin_comp = bin(np.uint32(~ some_int))[(len(bin(np.uint32(~ some_int)))-len(as_bin)):len(bin(np.uint32(~ some_int)))]
     for i in range(len(as_bin)):
-        np.append(out_array[0,],int(as_bin[i]))
-        
+        out_array1.append(int(as_bin[i]))
+        out_array2.append(int(bin_comp[i]))
+    return np.array([out_array1,out_array2],dtype=bool)
+
+
 
 
 

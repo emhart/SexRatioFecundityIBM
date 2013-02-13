@@ -1,5 +1,8 @@
 import numpy as np
 from collections import Counter
+from ibmsimulation import ibm_help as ih
+
+
 '''
 @author: Edmund Hart
 
@@ -33,44 +36,24 @@ class individual(object):
         self.pregnant = pregnant
         self.food_hist = [0,0,0,0,0]
         
-    def meiosis(self,myChromo):
+    def meiosis(self,myChromo,sizes):
         '''
-        Description: A function that returns a single chromosome from meisosis.  Allows for crossing over at up to two points with a probability that you set.  Crossing ever events happen
-        with probability bin_cx.  Needs to be run on each chromosome that you want to undergo meisosis.
+        Description: A function that returns a single chromosome from meisosis. Allows for crossing over using 
         :param myChromo: The chromosome to have undergo meisosis
         :type myChromo: a 2 x L numpy array where L is the number of loci in the chromosome. 
         :returns: a 1 x L numpy array that will be used in gamete creation
         '''
-        bin_cx = .5
-        outer_chromosomes = np.copy(myChromo)
+        as_bin = bin(some_int)[2:len(bin(some_int))]
+        bin_comp = bin(np.uint32(~ some_int))[(len(bin(np.uint32(~ some_int)))-len(as_bin)):len(bin(np.uint32(~ some_int)))]
+        
+        c_size = len(myChromo[0])
 
-        inner_chromosomes = np.copy(myChromo)
-        ic_copy = np.copy(inner_chromosomes)
-        # calculate the probability of a crossing over event
-        cx_prob = np.random.binomial(2,bin_cx)
-        if cx_prob == 1:
-            cp = np.random.randint(0,len(outer_chromosomes[1]))
-                      
-
-            inner_chromosomes[0,range(cp)] = ic_copy[1,range(cp)]
-            inner_chromosomes[1,range(cp)] = ic_copy[0,range(cp)]
-            to_ret = np.random.binomial(1,.5,size=2)
-            cells = [outer_chromosomes,inner_chromosomes]
-            return cells[to_ret[0]][to_ret[1]]
-        if cx_prob == 2:
-            cp = np.random.randint(0,len(outer_chromosomes[1]),size=2)
-            cp = sorted(cp)
-            
-            inner_chromosomes[0,range(cp[0])] = ic_copy[1,range(cp[0])]
-            inner_chromosomes[1,range(cp[0])] = ic_copy[0,range(cp[0])]
-            inner_chromosomes[0,range(cp[1],len(outer_chromosomes[1]))] = ic_copy[1,range(cp[1],len(outer_chromosomes[1]))]
-            inner_chromosomes[1,range(cp[1],len(outer_chromosomes[1]))] = ic_copy[0,range(cp[1],len(outer_chromosomes[1]))]
-
-            to_ret = np.random.binomial(1,.5,size=2)
-            cells = [outer_chromosomes,inner_chromosomes]
-            return cells[to_ret[0]][to_ret[1]]
-        else:
-            return outer_chromosomes[np.random.binomial(1,.5)]
+        cx_index = ih.bin2list(np.random.randint(sizes[0][c_size-1],sizes[1][c_size-1],1))
+        
+        myChromo = np.append(myChromo,np.array([np.append(myChromo[0][cx_index[0]],myChromo[1][cx_index[1]]),np.append(myChromo[1][cx_index[0]],myChromo[0][cx_index[1]])]),axis=0)
+        
+        return myChromo[np.random.randint(0,4,1)]
+    
     
     def forage(self,pos,energy):
         '''
@@ -123,11 +106,8 @@ class individual(object):
             #select a chromosome
             chr = np.random.choice([0,1],1)
             loci = np.random.choice(range(len(self.fecund_genes[chr,])),1)
-            self.fecund_genes[chr,loci] = self.fecund_genes[chr,loci] + np.random.choice([-1,1],1)*np.random.uniform(0,1,1)
-            if self.fecund_genes[chr,loci] > 1:
-                self.fecund_genes[chr,loci] = 1
-            if self.fecund_genes[chr,loci] < 0:
-                self.fecund_genes[chr,loci] = 0
+            self.fecund_genes[chr,loci] = np.random.uniform(0,1,1)
+
             
                 
             

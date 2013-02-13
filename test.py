@@ -25,7 +25,7 @@ c = -10
 const = 2
 
 #Set the parameters for all individual
-ind_set = {'fr':[.1,.8],'m_cost':.3,'energy':20,'rep_cost':.1,'lifespan':20,'rep_thresh': 20,'fecund_genes':[0,1,2,10]}
+ind_set = {'fr':[.1,.8],'m_cost':.3,'energy':20,'rep_cost':.1,'lifespan':20,'rep_thresh': 20,'fecund_genes':[0,1,2,4]}
 
 
 
@@ -35,7 +35,7 @@ tmp = L.Lattice(dims = [3,3],rate = np.random.uniform(100,120,25),init_energy = 
 
 groups = []
 z = []
-for x in range(30):
+for x in range(3):
     indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':ind_set["energy"],'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'ID' : ID_stack.pop(),'groupID' : 1,'sex' : np.random.binomial(1,.5,1),'rep_thresh': ind_set["rep_thresh"],'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3]))}
     z.append(Ind.individual(**indiv_dict))
 
@@ -45,7 +45,7 @@ for x in range(9):
 groups[0] = G.group(z,8,ID=0)
 
 tmp.groups = groups
-n = 100
+n = 40
 
 
 

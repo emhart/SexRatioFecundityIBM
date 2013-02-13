@@ -155,7 +155,7 @@ class group(object):
                     ID = tmp_IDstack.pop()
                     indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':ind_set["energy"],'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'ID' : ID,'groupID' : self.ID,'sex' : np.random.binomial(1,.5,1),'rep_thresh': ind_set["rep_thresh"],'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3]))}
 
-                    indiv_dict['fecund_genes'] = np.array([self.indivs[x].create_gametes(),self.indivs[mating_m].create_gametes()])
+                    indiv_dict['fecund_genes'] = np.append(self.indivs[x].create_gametes(),self.indivs[mating_m].create_gametes(),axis=0)
                 
                     indiv_dict['parentID_f'] = self.indivs[x].ID
                     indiv_dict['parentID_m'] = self.indivs[mating_m].ID

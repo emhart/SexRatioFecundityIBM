@@ -21,7 +21,9 @@ class Lattice(object):
         self.timeStep = 0
         #This needs to be the same size right now this has columns for time step, colony id, group size, actualFecund mean, var, genetic fecund mean, var 
         self.output = np.array([1,2,3,4,5,6,7])
-        
+        # Just a t
+        self.sizesTup = ((2**0,2**1,2**2,2**3,2**4,2**5,2**6,2**7,2**8,2**9,2**10,2**11,2**12,2**13,2**14,2**15,2**16,2**17),((2**1-1,2**2-1,2**3-1,2**4-1,2**5-1,2**6-1,2**7-1,2**8-1,2**9-1,2**10-1,2**11-1,2**12-1,2**13-1,2**14-1,2**15-1,2**16-1,2**17-1,2**18-1)))
+
         
         
     def distance(self,pos):
