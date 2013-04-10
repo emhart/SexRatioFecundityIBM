@@ -15,7 +15,7 @@ def test_profile():
     ID_stack = range(1000000)
     ID_stack.reverse()
 
-    b = -10
+    b = -1
     c = -10
     const = 2
 

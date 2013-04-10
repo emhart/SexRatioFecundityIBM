@@ -22,8 +22,8 @@ class Lattice(object):
         #This needs to be the same size right now this has columns for time step, colony id, group size, actualFecund mean, var, genetic fecund mean, var 
         self.output = np.array([1,2,3,4,5,6,7])
         # Just a t
-        self.sizesTup = ((2**0,2**1,2**2,2**3,2**4,2**5,2**6,2**7,2**8,2**9,2**10,2**11,2**12,2**13,2**14,2**15,2**16,2**17),((2**1-1,2**2-1,2**3-1,2**4-1,2**5-1,2**6-1,2**7-1,2**8-1,2**9-1,2**10-1,2**11-1,2**12-1,2**13-1,2**14-1,2**15-1,2**16-1,2**17-1,2**18-1)))
-
+        self.sizesTup = ((2**0,2**1,2**2,2**3,2**4,2**5,2**6,2**7,2**8,2**9,2**10,2**11,2**12,2**13,2**14,2**15,2**16,2**17,2**18,2**19,2**20),((2**1-1,2**2-1,2**3-1,2**4-1,2**5-1,2**6-1,2**7-1,2**8-1,2**9-1,2**10-1,2**11-1,2**12-1,2**13-1,2**14-1,2**15-1,2**16-1,2**17-1,2**18-1,2**19-1,2**20-1)))
+        
         
         
     def distance(self,pos):
@@ -70,10 +70,10 @@ class Lattice(object):
                 if np.random.binomial(1,d_p) == 1: 
                     self.groups[np.random.randint(0,self.size)].indivs.append(i)
 
-    def mutate(self):
+    def mutate(self,rate):
         for i in range(self.size):
             if self.groups[i]:
-                self.groups[i].mutate() 
+                self.groups[i].mutate(rate) 
                 
                 
     def reproduce(self):
@@ -86,7 +86,7 @@ class Lattice(object):
         off_num = []
         for i in range(self.size):
             if self.groups[i]:
-                off_num.append(self.groups[i].mate(b,c,const,ind_set))
+                off_num.append(self.groups[i].mate(b,c,const,ind_set,self.sizesTup))
         #remove zero values 
         off_num = filter (lambda a: a != 0, off_num)
  

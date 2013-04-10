@@ -109,10 +109,17 @@ class group(object):
             self.indivs[x].age = self.indivs[x].age + 1
         return energy
             
-    def mate(self,b,c,const,ind_set):
+    def mate(self,b,c,const,ind_set,sizes):
         ''',
          Description:  Sexual reproduction within the group.  Random mating of all females.  Males can mate
-        multiple times.
+        multiple times, so only one male is needed for all matings.
+        
+        :param b:
+        :type b:
+        :param c:
+        :type c:
+        :param const: Multiplier of the lifespan of an individual at which it can reproduce (e.g. the earliest age of reproduction)
+        :type const: floating point between 0 and 1
         
          
         '''
@@ -123,7 +130,11 @@ class group(object):
         off_num = np.array([]) #The actual number of off spring reproduced, returned 
         
         for x in range(self.size):
-            if self.indivs[x].sex == 1 and self.indivs[x].energy > (np.sum(self.indivs[x].fecund_genes) / const):
+            #rep_thresh = self.indivs[x].max_energy / const
+            rep_thresh = 2
+            
+            #if self.indivs[x].sex == 1 and self.indivs[x].energy > rep_thresh:
+            if self.indivs[x].age > (const * self.indivs[x].lifespan):
                 repro_count_f = np.append(repro_count_f,x)
             #if self.indivs[x].sex == 0 and self.indivs[x].energy > self.indivs[x].rep_thresh:
                 #repro_count_m = np.append(repro_count_m,x)
@@ -136,30 +147,36 @@ class group(object):
         
         repro_count_f = repro_count_f.astype(np.int64)
         repro_count_m = repro_count_m.astype(np.int64)
-        if repro_count_m.sum() > 0:
+        if len(repro_count_m) > 0:
             for x in repro_count_f:
                 babies = []
                 mating_m = np.random.choice(repro_count_m,1)
                 ### Set the max fecundity
+                rep_t_cost = (np.sum(self.indivs[x].fecund_genes)) * self.indivs[x].rep_cost
+
                 max_fecund = (np.sum(self.indivs[x].fecund_genes) + np.sum(self.indivs[mating_m].fecund_genes)) /2
                 ### lamda for the poison distribution
-                lam = ibm_help.gompertz(max_fecund,b,c,sum(self.indivs[x].food_hist) / len(self.indivs[x].food_hist))
+                lam = ibm_help.gompertz(max_fecund,b,c,self.indivs[x].energy) 
                 
                 offspring_size = np.random.poisson(lam)
-                self.indivs[x].energy = self.indivs[x].energy - (offspring_size*self.indivs[x].rep_cost)
+                
+                ### Testing out if the poisson call is what's causing the mismatch of actual and genetic fecundity
+                
+                #offspring_size = int(ibm_help.gompertz(max_fecund,b,c,sum(self.indivs[x].food_hist) / len(self.indivs[x].food_hist)))
+                
+                #offspring_size = int(max_fecund)
+                
                 
                 # Keep track of the average number of offspring when females reproduce
                 off_num = np.append(off_num,offspring_size)
                
                 for i in range(offspring_size):
-                    ID = tmp_IDstack.pop()
-                    indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':ind_set["energy"],'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'ID' : ID,'groupID' : self.ID,'sex' : np.random.binomial(1,.5,1),'rep_thresh': ind_set["rep_thresh"],'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3]))}
-
-                    indiv_dict['fecund_genes'] = np.append(self.indivs[x].create_gametes(),self.indivs[mating_m].create_gametes(),axis=0)
-                
-                    indiv_dict['parentID_f'] = self.indivs[x].ID
-                    indiv_dict['parentID_m'] = self.indivs[mating_m].ID
-                    babies.append(indiv_dict)
+                    if self.indivs[x].energy > 0:
+                        self.indivs[x].energy = self.indivs[x].energy - self.indivs[x].rep_cost
+                        indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':ind_set["energy"],'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'groupID' : 1,'sex' : np.random.binomial(1,.5,1),'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3])),"max_energy": ind_set["max_energy"]}
+    
+                        indiv_dict['fecund_genes'] = np.append(self.indivs[x].create_gametes(sizes),self.indivs[mating_m].create_gametes(sizes),axis=0)
+                        babies.append(indiv_dict)
             
                 self.indivs[x].pregnant = babies
         
@@ -194,13 +211,13 @@ class group(object):
         
         '''
         i_copy = list(self.indivs)
-        for x in i_copy: #use this len calculationto ensure the proper size is used
+        for x in i_copy: #use this len calculation to ensure the proper size is used
             
             if np.random.binomial(1,mort_prob) == 1:
                 self.indivs.remove(x)
                 
             
-            elif x.age > x.lifespan and x.energy > 0:
+            elif x.age > x.lifespan:
                 self.indivs.remove(x)
                 #print "I died of old age"
             
@@ -212,9 +229,9 @@ class group(object):
         ### resize when done
         self.resize()    
 
-    def mutate(self):
+    def mutate(self,rate):
         for x in self.indivs:
-            x.mutate()
+            x.mutate(rate)
                    
     def disperse(self):
         '''

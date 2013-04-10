@@ -17,7 +17,7 @@ class individual(object):
     :param sex: the sex of the individual 1 is male, 0 is female
     :type sex: scalar integer
     '''
-    def __init__(self,forage_rate,m_cost,rep_cost,rep_thresh,lifespan,age=0,energy=20,sex=0,fecund_genes=[],ID=0,parentID_m=[],parentID_f=[],groupID = 0,starv_time = 0, mutation_r = .05,pregnant=[]):
+    def __init__(self,forage_rate,m_cost,rep_cost,lifespan,age=0,energy=[],sex=0,fecund_genes=[],groupID = 0,starv_time = 0, mutation_r = .05,pregnant=[],max_energy=[]):
         self.age = age
         self.energy = energy
         self.sex = sex
@@ -25,16 +25,12 @@ class individual(object):
         self.forage_rate = forage_rate
         self.m_cost = m_cost
         self.rep_cost = rep_cost
-        self.rep_thresh = rep_thresh
         self.lifespan = lifespan
-        self.ID = ID
-        self.parentID_m = parentID_m
-        self.parentID_f = parentID_f
         self.groupID = groupID
         self.starv_time= starv_time
-        self.mutation_r = mutation_r
         self.pregnant = pregnant
-        self.food_hist = [0,0,0,0,0]
+        self.food_hist = [0,0]
+        self.max_energy = max_energy
         
     def meiosis(self,myChromo,sizes):
         '''
@@ -43,14 +39,15 @@ class individual(object):
         :type myChromo: a 2 x L numpy array where L is the number of loci in the chromosome. 
         :returns: a 1 x L numpy array that will be used in gamete creation
         '''
-        as_bin = bin(some_int)[2:len(bin(some_int))]
-        bin_comp = bin(np.uint32(~ some_int))[(len(bin(np.uint32(~ some_int)))-len(as_bin)):len(bin(np.uint32(~ some_int)))]
-        
+            
         c_size = len(myChromo[0])
 
-        cx_index = ih.bin2list(np.random.randint(sizes[0][c_size-1],sizes[1][c_size-1],1))
-        
-        myChromo = np.append(myChromo,np.array([np.append(myChromo[0][cx_index[0]],myChromo[1][cx_index[1]]),np.append(myChromo[1][cx_index[0]],myChromo[0][cx_index[1]])]),axis=0)
+        my_randint = np.random.randint(sizes[0][c_size-1],sizes[1][c_size-1],1)
+        as_bin = np.array([int(d) for d in bin(my_randint)[2:]],dtype=bool)
+        bin_comp = np.array([int(d) for d in bin(np.uint32(~ my_randint))[(len(bin(np.uint32(~ my_randint)))-len(as_bin)):34]],dtype=bool)
+
+
+        myChromo = np.append(myChromo,np.array([np.append(myChromo[0][as_bin],myChromo[1][bin_comp]),np.append(myChromo[1][as_bin],myChromo[0][bin_comp])]),axis=0)
         
         return myChromo[np.random.randint(0,4,1)]
     
@@ -92,17 +89,19 @@ class individual(object):
             self.starv_time +=1
             return 0
                       
-    def create_gametes(self):
-        fecundity_gamete = self.meiosis(self.fecund_genes)
+    def create_gametes(self,sizes):
+        fecundity_gamete = self.meiosis(self.fecund_genes,sizes)
         return fecundity_gamete
     
-    def mutate(self):
+    def mutate(self,rate):
         '''
         Description: Mutates an individuals genome, set up for a continuous genome
+        :param rate: The probability that an individual mutates at each time step (this should be very low)
+        :type rate: Floating point between 0 and 1
         
         '''
         
-        if np.random.binomial(1,self.mutation_r,1) == 1:
+        if np.random.binomial(1,rate,1) == 1:
             #select a chromosome
             chr = np.random.choice([0,1],1)
             loci = np.random.choice(range(len(self.fecund_genes[chr,])),1)
