@@ -25,7 +25,7 @@ const: sets the threshold reproductive energy needed as a function of total pote
 '''
 b = -10
 c = -1
-const = .2
+const = .5
 
 '''
 Set the parameters for all individuals
@@ -38,17 +38,17 @@ fecund_genes: A list of four numbers. Positions [0,1] are the upper and lower bo
 and [2] is the number of chromosomes, usually 2, and position [3] is the length of each chromosome.
 
 '''
-ind_set = {'fr':[2,2],'m_cost':.5,'energy':2,'rep_cost': .1 ,'lifespan':3,'fecund_genes':[0,1,2,3],'max_energy':20}
+ind_set = {'fr':[1,1.2],'m_cost':.5,'energy':2,'rep_cost': .1 ,'lifespan':10,'fecund_genes':[0,1,2,20],'max_energy':20}
 
 
 
-tmp = L.Lattice(dims = [3,3],rate = np.random.uniform(100,100,9),init_energy = [100]*9, max_energy = 100000000000 )
+tmp = L.Lattice(dims = [3,3],rate = np.random.uniform(100,100,9),init_energy = [100]*9, max_energy = 400 )
 
 
 
 groups = []
 z = []
-for x in range(100):
+for x in range(20):
     indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':ind_set["energy"],'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'groupID' : 1,'sex' : np.random.binomial(1,.5,1),'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3])),"max_energy": ind_set["max_energy"]}
     z.append(Ind.individual(**indiv_dict))
 
@@ -58,7 +58,7 @@ for x in range(9):
 groups[0] = G.group(z,8,ID=0)
 
 tmp.groups = groups
-n = 14
+n = 1500
 
 
 
@@ -67,11 +67,11 @@ for x in range(n):
         print x
     tmp.forage()
     tmp.regenerate()
-    tmp.mutate(.000)
+    tmp.mutate(0.01)
     tmp.mate(b,c,const,ind_set)
     tmp.disperse(0)
     tmp.reproduce()
-    tmp.senesce(0)
+    tmp.senesce(.03)
     tmp.data_collect()
 
 ih.write_ibmdata(tmp)
