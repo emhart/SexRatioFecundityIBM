@@ -65,9 +65,7 @@ class group(object):
         '''
         sr = []
         tf = []
-        #fr = []
-        #enlev = []
-        
+
         
         for i in range(self.size):
             sr.append(self.indivs[i].sex[0])
@@ -106,7 +104,6 @@ class group(object):
         
         for x in ran.sample(range(self.size),self.size):
             energy[self.pos] = self.indivs[x].forage(self.pos,energy)
-            self.indivs[x].age = self.indivs[x].age + 1
         return energy
             
     def mate(self,b,c,const,ind_set,sizes):
@@ -130,14 +127,10 @@ class group(object):
         off_num = np.array([]) #The actual number of off spring reproduced, returned 
         
         for x in range(self.size):
-            #rep_thresh = self.indivs[x].max_energy / const
-            rep_thresh = 2
-            
-            #if self.indivs[x].sex == 1 and self.indivs[x].energy > rep_thresh:
-            if self.indivs[x].age > (const * self.indivs[x].lifespan):
+
+            self.indivs[x].age = self.indivs[x].age + 1            
+            if self.indivs[x].sex == 1 and self.indivs[x].energy >= 1:
                 repro_count_f = np.append(repro_count_f,x)
-            #if self.indivs[x].sex == 0 and self.indivs[x].energy > self.indivs[x].rep_thresh:
-                #repro_count_m = np.append(repro_count_m,x)
             
             # In this version all males can reproduce no matter what
             if self.indivs[x].sex == 0:
@@ -151,12 +144,10 @@ class group(object):
             for x in repro_count_f:
                 babies = []
                 mating_m = np.random.choice(repro_count_m,1)
-                ### Set the max fecundity
-                rep_t_cost = (np.sum(self.indivs[x].fecund_genes)) * self.indivs[x].rep_cost
-
+            
                 max_fecund = (np.sum(self.indivs[x].fecund_genes) + np.sum(self.indivs[mating_m].fecund_genes)) /2
                 ### lamda for the poison distribution
-                lam = ibm_help.gompertz(max_fecund,b,c,self.indivs[x].energy) 
+                lam = ibm_help.gompertz(max_fecund,b,c,self.indivs[x].max_energy) 
                 
                 offspring_size = np.random.poisson(lam)
                 
@@ -171,17 +162,15 @@ class group(object):
                 off_num = np.append(off_num,offspring_size)
                
                 for i in range(offspring_size):
-                    if self.indivs[x].energy > 0:
-                        self.indivs[x].energy = self.indivs[x].energy - self.indivs[x].rep_cost
-                        indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':ind_set["energy"],'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'groupID' : 1,'sex' : np.random.binomial(1,.5,1),'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3])),"max_energy": ind_set["max_energy"]}
+
+                    indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':ind_set["energy"],'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'groupID' : 1,'sex' : np.random.binomial(1,.5,1),'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3])),"max_energy": ind_set["max_energy"]}
     
-                        indiv_dict['fecund_genes'] = np.append(self.indivs[x].create_gametes(sizes),self.indivs[mating_m].create_gametes(sizes),axis=0)
-                        babies.append(indiv_dict)
+                    indiv_dict['fecund_genes'] = np.append(self.indivs[x].create_gametes(sizes),self.indivs[mating_m].create_gametes(sizes),axis=0)
+                    babies.append(indiv_dict)
             
                 self.indivs[x].pregnant = babies
         
         self.resize()   
-        self.ID_stack = tmp_IDstack
         if off_num.any():
             self.actFecund = off_num.mean()
             self.actual_FVar = off_num.var()
@@ -217,14 +206,10 @@ class group(object):
                 self.indivs.remove(x)
                 
             
-            elif x.age > x.lifespan:
+            elif x.age >= x.lifespan:
                 self.indivs.remove(x)
                 #print "I died of old age"
-            
-            elif x.energy <= 0:
-                self.indivs.remove(x)
-                #print "I died of no food"
-            
+
             
         ### resize when done
         self.resize()    

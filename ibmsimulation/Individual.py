@@ -68,25 +68,15 @@ class individual(object):
         '''
         pot_energy = energy[pos]
         if pot_energy > self.forage_rate:
-            self.energy = self.forage_rate + self.energy - self.m_cost
-            self.food_hist.pop()
-            self.food_hist.insert(0,self.forage_rate)
-            
-            self.starv_time = 0
+            self.energy = self.forage_rate + self.energy 
             return pot_energy - self.forage_rate
+        
         elif pot_energy < self.forage_rate and pot_energy > 0: 
-            self.energy = self.energy + pot_energy - self.m_cost
-            self.food_hist.pop()
-            self.food_hist.insert(0,pot_energy)
-            
-            self.starv_time +=1
+            self.energy = self.energy + pot_energy 
             return 0
+
         elif pot_energy <= 0:
-            self.energy = self.energy - self.m_cost
-            self.food_hist.pop()
-            self.food_hist.insert(0,0)
-            
-            self.starv_time +=1
+            self.energy = self.energy 
             return 0
                       
     def create_gametes(self,sizes):
