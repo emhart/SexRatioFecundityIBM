@@ -38,27 +38,27 @@ fecund_genes: A list of four numbers. Positions [0,1] are the upper and lower bo
 and [2] is the number of chromosomes, usually 2, and position [3] is the length of each chromosome.
 
 '''
-ind_set = {'fr':[1,1],'m_cost':0,'energy':.3,'rep_cost': 0 ,'lifespan':1,'fecund_genes':[0,1,2,4],'max_energy':10}
+ind_set = {'fr':[1,1],'m_cost':0,'energy':1,'rep_cost': 0 ,'lifespan':1,'fecund_genes':[0,1,2,25],'max_energy':10}
 
 
 
-tmp = L.Lattice(dims = [1,1],rate = np.random.uniform(10,10,2),init_energy = [100]*2, max_energy = 200 )
+tmp = L.Lattice(dims = [3,3],Kp = [.01,.02] )
 
-
+ 
 
 groups = []
 z = []
-for x in range(20):
+for x in range(50):
     indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':1,'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'groupID' : 1,'sex' : np.random.binomial(1,.5,1),'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3])),"max_energy": ind_set["max_energy"]}
     z.append(Ind.individual(**indiv_dict))
 
-for x in range(2):
+for x in range(9):
     groups.append(G.group([],x,ID=x))
 
 groups[0] = G.group(z,0,ID=0)
 
 tmp.groups = groups
-n = 8
+n = 1000
 
 
 
@@ -67,12 +67,12 @@ for x in range(n):
         print x
     
 
-    tmp.mate(b,c,const,ind_set)
-    tmp.disperse(0)
+    tmp.mate(ind_set)
+    tmp.disperse(.1,True,24)
     tmp.reproduce()
-    tmp.senesce(.00)
+    tmp.senesce(.05)
     tmp.mutate(0.01)
-    tmp.forage()
+    #tmp.forage()
     tmp.regenerate()
     tmp.data_collect()
 

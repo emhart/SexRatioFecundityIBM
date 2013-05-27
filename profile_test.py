@@ -12,33 +12,46 @@ import cProfile
 
 def test_profile():
     
-    ID_stack = range(1000000)
-    ID_stack.reverse()
+   
+    '''
+    Global parameter sets:
+    b: Sets the intercept of the gompertz equation, more negative values force the y intercept at 0 longer.
+    c: Sets how rapidly the function asymptotes.  more negative values asymptote faster.
+    const: sets the threshold reproductive energy needed as a function of total potential fecundity.
+    '''
+    b = -10
+    c = -1
+    const = .5
 
-    b = -1
-    c = -10
-    const = 2
+    '''
+    Set the parameters for all individuals
+    fr: The upper and lower bounds of the feeding rate parameter, drawn from a uniform distribution
+    energy: The starting energy of a newly born individual
+    rep_cost: The energetic cost of reproduction per individual offspring
+    lifespan: The number of time steps an organism can live.
+    rep_thresh: The energetic threshold that an organism needs to reach.
+    fecund_genes: A list of four numbers. Positions [0,1] are the upper and lower bounds of a uniform distribution
+    and [2] is the number of chromosomes, usually 2, and position [3] is the length of each chromosome.
 
-#Set the parameters for all individual
-    ind_set = {'fr':[.1,.8],'m_cost':.3,'energy':20,'rep_cost':.1,'lifespan':20,'rep_thresh': 20,'fecund_genes':[0,1,2,10]}
+    '''
+    ind_set = {'fr':[1,1],'m_cost':0,'energy':1,'rep_cost': 0 ,'lifespan':1,'fecund_genes':[0,1,2,20],'max_energy':10}
 
 
 
-    tmp = L.Lattice(dims = [3,3],rate = np.random.uniform(100,120,25),init_energy = [100]*25, max_energy = 1000 )
+    tmp = L.Lattice(dims = [5,4],Kp = [.01,.02] )
 
-
+ 
 
     groups = []
     z = []
-    for x in range(30):
-        indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':ind_set["energy"],'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'ID' : ID_stack.pop(),'groupID' : 1,'sex' : np.random.binomial(1,.5,1),'rep_thresh': ind_set["rep_thresh"],'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3]))}
+    for x in range(50):
+        indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':1,'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'groupID' : 1,'sex' : np.random.binomial(1,.5,1),'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3])),"max_energy": ind_set["max_energy"]}
         z.append(Ind.individual(**indiv_dict))
 
-    for x in range(9):
+    for x in range(20):
         groups.append(G.group([],x,ID=x))
 
-
-    groups[0] = G.group(z,8,ID=0)
+    groups[0] = G.group(z,0,ID=0)
 
     tmp.groups = groups
     n = 100
@@ -46,19 +59,20 @@ def test_profile():
 
 
     for x in range(n):
-        if x%20 == 0:
+        if x%1 == 0:
             print x
-        tmp.forage()
-        tmp.regenerate()
-        tmp.mutate()
-        tmp.mate(b,c,const,ind_set)
-        tmp.disperse(1)
+    
+
+        tmp.mate(ind_set)
+        tmp.disperse(.1,True,24)
         tmp.reproduce()
-        tmp.senesce(0.05)
+        tmp.senesce(.05)
+        tmp.mutate(0.01)
+    
+        tmp.regenerate()
         tmp.data_collect()
 
     ih.write_ibmdata(tmp)
     print "done"
-    
 
 cProfile.run('test_profile()')

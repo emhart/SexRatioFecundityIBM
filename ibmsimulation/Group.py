@@ -2,7 +2,8 @@ from collections import Counter
 import random as ran
 import numpy as np
 from ibmsimulation import Individual as Ind
-from ibmsimulation import ibm_help 
+from ibmsimulation import ibm_help
+import math 
 
 class group(object):
     '''
@@ -106,7 +107,7 @@ class group(object):
             energy[self.pos] = self.indivs[x].forage(self.pos,energy)
         return energy
             
-    def mate(self,b,c,const,ind_set,sizes):
+    def mate(self,K,ind_set,sizes):
         ''',
          Description:  Sexual reproduction within the group.  Random mating of all females.  Males can mate
         multiple times, so only one male is needed for all matings.
@@ -125,11 +126,11 @@ class group(object):
         tmp_IDstack = self.ID_stack
         
         off_num = np.array([]) #The actual number of off spring reproduced, returned 
-        
+        self.resize()
         for x in range(self.size):
 
             self.indivs[x].age = self.indivs[x].age + 1            
-            if self.indivs[x].sex == 1 and self.indivs[x].energy >= 1:
+            if self.indivs[x].sex == 1:
                 repro_count_f = np.append(repro_count_f,x)
             
             # In this version all males can reproduce no matter what
@@ -139,7 +140,15 @@ class group(object):
 
         
         repro_count_f = repro_count_f.astype(np.int64)
+        
+        #### Code for scramble competition
+        # draw an index
+        #can_rep = np.random.binomial(1,math.exp(-K*self.size),len(repro_count_f))
+        #repro_count_f = repro_count_f[can_rep.astype(bool)]
+        
+        
         repro_count_m = repro_count_m.astype(np.int64)
+        
         if len(repro_count_m) > 0:
             for x in repro_count_f:
                 babies = []
@@ -147,7 +156,12 @@ class group(object):
             
                 max_fecund = (np.sum(self.indivs[x].fecund_genes) + np.sum(self.indivs[mating_m].fecund_genes)) /2
                 ### lamda for the poison distribution
-                lam = ibm_help.gompertz(max_fecund,b,c,self.indivs[x].max_energy) 
+                
+                ### Lambda for contest competition
+                lam = max_fecund * math.exp(-K*self.size)
+                
+                ### Lambda for scramble competition
+                #lam = max_fecund 
                 
                 offspring_size = np.random.poisson(lam)
                 
@@ -187,6 +201,7 @@ class group(object):
                 for i in self.indivs[x].pregnant:
                     self.indivs.append(Ind.individual(**i))
                 self.indivs[x].pregnant = []
+            self.indivs[x].age += 1
          
    
     def senesce(self,mort_prob):
@@ -218,18 +233,27 @@ class group(object):
         for x in self.indivs:
             x.mutate(rate)
                    
-    def disperse(self):
+    def disperse(self,K):
         '''
         Description: checks the starving time on each individual and removes those individuals from the current group.  
         :modifies: self.indivs
         :returns: a list of individuals that are dispersing
         '''
         dispersers = []
-        i_copy = list(self.indivs)
-        for x in i_copy:
-            if x.starv_time >= 2:
-                dispersers.append(x)
-                self.indivs.remove(x)
-        return dispersers
+        self.resize()
+        nmax = 1 / K
+        if nmax >= self.size:
+            return dispersers
+    
+        if nmax < self.size:
+            i_copy = list(self.indivs)
+            p_disp = 1 - (nmax / self.size)
+            for x in i_copy:
+                to_disp = np.random.binomial(1,p_disp,1).astype(bool)
+                if to_disp:
+                    dispersers.append(x)
+                    self.indivs.remove(x)
+        
+            return dispersers
 
 
