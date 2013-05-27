@@ -11,7 +11,11 @@ class Lattice(object):
     masterData holds all the data for a simulation
     '''
     def __init__(self,dims,Kp,groups=[],size=0):
+<<<<<<< HEAD
         self.occupied = [0]*(dims[0]*dims[1])
+=======
+        self.occupied = np.array([0]*(dims[0]*dims[1]))
+>>>>>>> Finished one generation implementation
         self.xmax = dims[0]
         self.groups = groups
         self.size = (dims[0]*dims[1])
@@ -19,10 +23,17 @@ class Lattice(object):
         #This needs to be the same size right now this has columns for time step, colony id, group size, actualFecund mean, var, genetic fecund mean, var 
         self.output = np.array([1,2,3,4,5,6,7])
         # Just a t
+<<<<<<< HEAD
         self.sizesTup = ((2**0,2**1,2**2,2**3,2**4,2**5,2**6,2**7,2**8,2**9,2**10,2**11,2**12,2**13,2**14,2**15,2**16,2**17,2**18,2**19,2**20),((2**1-1,2**2-1,2**3-1,2**4-1,2**5-1,2**6-1,2**7-1,2**8-1,2**9-1,2**10-1,2**11-1,2**12-1,2**13-1,2**14-1,2**15-1,2**16-1,2**17-1,2**18-1,2**19-1,2**20-1)))
         self.Kp = Kp
         self.K = np.random.uniform(Kp[0],Kp[1],self.size)
         
+=======
+        self.sizesTup = ((2**0,2**1,2**2,2**3,2**4,2**5,2**6,2**7,2**8,2**9,2**10,2**11,2**12,2**13,2**14,2**15,2**16,2**17,2**18,2**19,2**20,2**21,2**22,2**23,2**24,2**25),((2**1-1,2**2-1,2**3-1,2**4-1,2**5-1,2**6-1,2**7-1,2**8-1,2**9-1,2**10-1,2**11-1,2**12-1,2**13-1,2**14-1,2**15-1,2**16-1,2**17-1,2**18-1,2**19-1,2**20-1,2**21-1,2**22-1,2**23-1,2**24-1,2**25-1)))
+        self.Kp = Kp       
+        self.K = np.random.uniform(Kp[0],Kp[1],self.size)
+        self.Km1 = self.K
+>>>>>>> Finished one generation implementation
         
     def distance(self,pos):
         '''
@@ -51,9 +62,13 @@ class Lattice(object):
         :modifies K: Adjusts the carrying capacity of the patch
 
         '''
+<<<<<<< HEAD
+=======
+        self.Km1 = self.K
+>>>>>>> Finished one generation implementation
         self.K = np.random.uniform(self.Kp[0],self.Kp[1],self.size)
     
-    def disperse(self,d_p):
+    def disperse(self,d_p,empty_only = True, disp_size = 2):
         '''
         Description: Randomly sort through each group, colonize new patches randomly
         :param: d_p
@@ -61,13 +76,36 @@ class Lattice(object):
         '''
         ## Set up index for randomized dispersal
         self.set_occupied()
+<<<<<<< HEAD
         disp_index = rn.sample(range(self.size),self.size)
         for x in disp_index:
             to_disp = self.groups[x].disperse(self.K[x])
             for i in to_disp:
+=======
+        # Get list of empty sites
+        empty_sites = np.where(self.occupied == 0)[0]
+        
+        disp_index = rn.sample(range(self.size),self.size)
+        for x in disp_index:
+            to_disp = self.groups[x].disperse(self.K[x])
+            if not empty_only:
+                for i in to_disp:
+>>>>>>> Finished one generation implementation
                 #### Tune dispersal with a simple binomial for now....
-                if np.random.binomial(1,d_p) == 1: 
-                    self.groups[np.random.randint(0,self.size)].indivs.append(i)
+                    if np.random.binomial(1,d_p) == 1: 
+                        self.groups[np.random.randint(0,self.size)].indivs.append(i)
+            elif empty_only and empty_sites.size > 0 and len(to_disp) > disp_size:
+                #choose a site
+                site_index = rn.choice(empty_sites)
+                #set the selected site to be occupied
+                self.occupied[site_index] = 1
+                #update the list of empty sites
+                empty_sites = np.where(self.occupied == 0)[0]
+                #choose a group to colonize it
+                colonizers = rn.sample(to_disp,disp_size)
+                self.groups[site_index].indivs.extend(colonizers)
+                
+                
 
     def mutate(self,rate):
         for i in range(self.size):
@@ -141,12 +179,22 @@ class Lattice(object):
         :modifies occupied: sets the occupied flag to 1 or 0 depending on migration or extinction
         
         '''
+<<<<<<< HEAD
         for i in range(self.size):
             print self.occupied[i] 
             if self.groups[i].size > 0:
                 self.occupied[i] = 1
             else:
                 self.groups[i].size = 1
+=======
+        #occ = []
+        for i in range(self.size):
+            if self.groups[i].size > 0:
+                self.occupied[i] = 1
+            else:
+                self.occupied[i] = 0
+            
+>>>>>>> Finished one generation implementation
             
         
         
