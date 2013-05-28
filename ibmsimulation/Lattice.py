@@ -11,10 +11,11 @@ class Lattice(object):
     masterData holds all the data for a simulation
     '''
     def __init__(self,dims,Kp,groups=[],size=0):
-        self.occupied = np.array([0]*(dims[0]*dims[1]))
+        self.occupied = np.array([0]*(dims[0]*dims[1])) 
         self.xmax = dims[0]
         self.groups = groups
         self.size = (dims[0]*dims[1])
+        self.ID = range(self.size)
         self.timeStep = 0
         #This needs to be the same size right now this has columns for time step, colony id, group size, actualFecund mean, var, genetic fecund mean, var 
         self.output = np.array([1,2,3,4,5,6,7])
@@ -85,6 +86,54 @@ class Lattice(object):
                 self.groups[site_index].indivs.extend(colonizers)
                 
                 
+    def dispersal(self):
+        '''
+        Description: Returns a list of potential dispersers
+        :returns dispersers: a dictionary where patch ID is the Key, and the values are a list of dispersers 
+        
+        '''
+        dispersers = {}
+        for ind, g in enumerate(self.groups):
+            dispersers[self.ID[ind]] = g.disperse(self.Km1[ind])
+        return dispersers
+        
+    def colonize(self,disp_size = 2):
+        '''
+        '''
+        self.set_occupied()
+        to_disp = self.dispersal()
+        ## Get the proportion for each dispersal
+        disp_numbers = np.array(map(len,to_disp.values()),dtype = np.float64)
+        disp_probs = disp_numbers / sum(disp_numbers)
+        # get the propagule number
+        prop_number = disp_numbers // disp_size 
+        
+        empty_sites = np.where(self.occupied == 0)[0]  
+        
+        if empty_sites.size > 0 and sum(prop_number) > 0:
+            ### Draw colonizers
+            col_number = np.random.multinomial(empty_sites.size,disp_probs)
+            
+            #Truncate to fit the number of possible colonizers
+            col_number[prop_number < col_number] = prop_number[prop_number < col_number]
+            for ID, propagules in enumerate(col_number):
+                for colonizer in range(propagules):
+                    # Take a random sample from the right spot in the dictionary
+                    prop = rn.sample(to_disp[ID],disp_size)
+                    #remove the disperser
+                    for i in prop:
+                        to_disp[ID].remove(i)
+                    ### now append them to their new location ###
+                    
+                    # draw a random site
+                    new_site = rn.choice(empty_sites)
+                    self.groups[new_site].indivs.extend(prop)
+                    
+                    #remove that site from the list
+                    self.occupied[new_site] = 1  
+                    empty_sites = np.where(self.occupied == 0)[0]  
+
+
 
     def mutate(self,rate):
         for i in range(self.size):
