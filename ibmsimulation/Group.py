@@ -17,7 +17,7 @@ class group(object):
         self.size = len(indivs)
         self.ages = ages
         self.pos = pos   
-        self.ID = ID       
+        self.ID =          
         self.IDmax = 0    
         self.ID_stack = ID_stack
         ###Reporter data structures. 

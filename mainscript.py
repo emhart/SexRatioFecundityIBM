@@ -42,6 +42,7 @@ def main():
     min_pop = param_dict['min_pop']
     max_pop = param_dict['max_pop']
     ngens = int(param_dict['ngens'])
+    min_col_size = int(param_dict['min_col_size'])
 
 
     ind_set = {'fr':[1,1],'m_cost':0,'energy':1,'rep_cost': 0 ,'lifespan':1,'fecund_genes':[0,1,2,20],'max_energy':10}
@@ -74,7 +75,7 @@ def main():
 
         tmp.mate(ind_set)
         #tmp.disperse(.1,True,24)
-        tmp.colonize(10,.5,.001)
+        tmp.colonize(min_col_size,.5,.001)
         tmp.reproduce()
         tmp.senesce(.05)
         tmp.mutate(0.001)
@@ -82,7 +83,8 @@ def main():
         tmp.regenerate()
         tmp.data_collect()
 
-    ih.write_ibmdata(tmp)
+    fName = "data/output_min_pop_"+str(min_pop)+"_min_col_size_"+str(min_col_size)+".csv"
+    ih.write_ibmdata(tmp,fName)
     print "done"
 
 if __name__ == "__main__":

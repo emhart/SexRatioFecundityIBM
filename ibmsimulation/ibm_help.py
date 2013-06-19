@@ -28,7 +28,7 @@ def gompertz(a,b,c,x):
         return a*math.exp(b*math.exp(c*x))
     
     
-def write_ibmdata(LatticeObj):
+def write_ibmdata(LatticeObj,fName):
     '''
     Description: Writes a csv file of all data relevant to our study.  Writes a data file with all the relevant data from the entire simulation.
     right now it writes data on sex ratio, genetic fecundity as calculated by genetics, and then actual fecundity.  Each data item will be written as it's own
@@ -41,7 +41,7 @@ def write_ibmdata(LatticeObj):
     data_toWrite = LatticeObj.output
     open("output.csv","w").close()
     print "Hey I opened the file"
-    with open("output.csv","a") as csvfile:
+    with open(fName,"a") as csvfile:
         mywriter = csv.writer(csvfile, delimiter=",")
         for x in data_toWrite:
             mywriter.writerow(x)
