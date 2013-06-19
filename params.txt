@@ -1,0 +1,5 @@
+ngens 100
+x_dim 2
+y_dim 5
+min_pop 0.016
+max_pop 0.01

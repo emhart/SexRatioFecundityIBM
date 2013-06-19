@@ -82,7 +82,6 @@ class individual(object):
     def create_gametes(self,sizes):
         fecundity_gamete = self.meiosis(self.fecund_genes,sizes)
         return fecundity_gamete
-    
     def mutate(self,rate):
         '''
         Description: Mutates an individuals genome, set up for a continuous genome

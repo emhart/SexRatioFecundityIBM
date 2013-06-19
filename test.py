@@ -22,20 +22,20 @@ from ibmsimulation import ibm_help as ih
 Set the parameters for all individuals
 fr: The upper and lower bounds of the feeding rate parameter, drawn from a uniform distribution
 energy: The starting energy of a newly born individual
-rep_cost: The energetic cost of reproduction per individual offspring
+rep_cost: The energetic cost of reproduction per individual offspring    
 lifespan: The number of time steps an organism can live.
 rep_thresh: The energetic threshold that an organism needs to reach.
 fecund_genes: A list of four numbers. Positions [0,1] are the upper and lower bounds of a uniform distribution
 and [2] is the number of chromosomes, usually 2, and position [3] is the length of each chromosome.
 
 '''
-ind_set = {'fr':[1,1],'m_cost':0,'energy':1,'rep_cost': 0 ,'lifespan':1,'fecund_genes':[0,.5,2,25],'max_energy':10}
+ind_set = {'fr':[1,1],'m_cost':0,'energy':1,'rep_cost': 0 ,'lifespan':1,'fecund_genes':[0,.2,2,25],'max_energy':10}
 
 
 
-tmp = L.Lattice(dims = [10,10],Kp = [.01,.02] )
+tmp = L.Lattice(dims = [5,2],Kp = [.01,.02] )
 
-n_patch = 100
+n_patch = 10
 groups = []
 
 for i in range(n_patch):
@@ -47,22 +47,21 @@ for i in range(n_patch):
     groups.append(G.group(z,i,ID=i))
 
 tmp.groups = groups
-n = 1000
+n = 2000
 
 
 
 for x in range(n):
-    if x%1 == 0:
+    if x%10 == 0:
         print x
     
 
     tmp.mate(ind_set)
     #tmp.disperse(.1,True,24)
-    tmp.dispersal()
-    tmp.colonize(10)
+    tmp.colonize(20,.5,.01)
     tmp.reproduce()
     tmp.senesce(.05)
-    tmp.mutate(0.07)
+    tmp.mutate(0.005)
     #tmp.forage()
     tmp.regenerate()
     tmp.data_collect()

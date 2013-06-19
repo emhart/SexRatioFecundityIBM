@@ -1,6 +1,8 @@
 import numpy as np
 from collections import Counter
 import random as rn
+from itertools import chain
+import math
 '''
 This is my test comment
 '''
@@ -16,14 +18,16 @@ class Lattice(object):
         self.groups = groups
         self.size = (dims[0]*dims[1])
         self.ID = range(self.size)
+        self.groupID = range(self.size)
         self.timeStep = 0
         #This needs to be the same size right now this has columns for time step, colony id, group size, actualFecund mean, var, genetic fecund mean, var 
-        self.output = np.array([1,2,3,4,5,6,7])
+        self.output = np.array([1,2,3,4,5,6,7,8,9])
         # Just a t
         self.sizesTup = ((2**0,2**1,2**2,2**3,2**4,2**5,2**6,2**7,2**8,2**9,2**10,2**11,2**12,2**13,2**14,2**15,2**16,2**17,2**18,2**19,2**20,2**21,2**22,2**23,2**24,2**25),((2**1-1,2**2-1,2**3-1,2**4-1,2**5-1,2**6-1,2**7-1,2**8-1,2**9-1,2**10-1,2**11-1,2**12-1,2**13-1,2**14-1,2**15-1,2**16-1,2**17-1,2**18-1,2**19-1,2**20-1,2**21-1,2**22-1,2**23-1,2**24-1,2**25-1)))
         self.Kp = Kp       
         self.K = np.random.uniform(Kp[0],Kp[1],self.size)
         self.Km1 = self.K
+        
         
     def distance(self,pos):
         '''
@@ -55,7 +59,7 @@ class Lattice(object):
         self.Km1 = self.K
         self.K = np.random.uniform(self.Kp[0],self.Kp[1],self.size)
     
-    def disperse(self,d_p,empty_only = True, disp_size = 2):
+    def disperse(self,migration_p,migration_frac):
         '''
         Description: Randomly sort through each group, colonize new patches randomly
         :param: d_p
@@ -63,29 +67,16 @@ class Lattice(object):
         '''
         ## Set up index for randomized dispersal
         self.set_occupied()
-        # Get list of empty sites
-        empty_sites = np.where(self.occupied == 0)[0]
-        
         disp_index = rn.sample(range(self.size),self.size)
         for x in disp_index:
             to_disp = self.groups[x].disperse(self.K[x])
-            if not empty_only:
-                for i in to_disp:
+            for i in to_disp:
                 #### Tune dispersal with a simple binomial for now....
-                    if np.random.binomial(1,d_p) == 1: 
-                        self.groups[np.random.randint(0,self.size)].indivs.append(i)
-            elif empty_only and empty_sites.size > 0 and len(to_disp) > disp_size:
-                #choose a site
-                site_index = rn.choice(empty_sites)
-                #set the selected site to be occupied
-                self.occupied[site_index] = 1
-                #update the list of empty sites
-                empty_sites = np.where(self.occupied == 0)[0]
-                #choose a group to colonize it
-                colonizers = rn.sample(to_disp,disp_size)
-                self.groups[site_index].indivs.extend(colonizers)
-                
-                
+                if np.random.binomial(1,migration_p) == 1: 
+                    self.groups[np.random.randint(0,self.size)].indivs.append(i)
+                    
+                    
+
     def dispersal(self):
         '''
         Description: Returns a list of potential dispersers
@@ -97,7 +88,7 @@ class Lattice(object):
             dispersers[self.ID[ind]] = g.disperse(self.Km1[ind])
         return dispersers
         
-    def colonize(self,disp_size = 2):
+    def colonize(self,disp_size = 2, migration_p = 0, migration_frac = .001):
         '''
         '''
         self.set_occupied()
@@ -128,11 +119,27 @@ class Lattice(object):
                     # draw a random site
                     new_site = rn.choice(empty_sites)
                     self.groups[new_site].indivs.extend(prop)
+                    self.groupID[new_site] = ID
                     
                     #remove that site from the list
                     self.occupied[new_site] = 1  
                     empty_sites = np.where(self.occupied == 0)[0]  
-
+                disp_index = rn.sample(range(self.size),self.size)
+        
+        ### migration component
+        disp_index = rn.sample(range(self.size),self.size)
+        ## flatten our dispersers
+        migrate_pool =  list(chain.from_iterable(to_disp.values()))
+        for x in disp_index:
+            #### Tune dispersal with a simple binomial for now....
+            if np.random.binomial(1,migration_p) == 1: 
+                num_migrate = int(math.floor(self.groups[x].size * migration_frac))
+                #now pop it off 
+                if len(migrate_pool) > num_migrate:
+                    migrators = rn.sample(migrate_pool,num_migrate)
+                    self.groups[x].indivs.extend(migrators)
+                    
+                    
 
 
     def mutate(self,rate):
@@ -187,9 +194,12 @@ class Lattice(object):
                 self.groups[i].resize()
                 pop_sizes = self.groups[i].size
                 curID = self.groups[i].ID
-                self.output = np.vstack((self.output,[self.timeStep,curID,pop_sizes,mean_genF,var_genF,mean_actF,var_actF]))
+                p_ID = self.ID[i]
+                g_ID = self.groupID[i]
+
+                self.output = np.vstack((self.output,[self.timeStep,curID,p_ID,g_ID,pop_sizes,mean_genF,var_genF,mean_actF,var_actF]))
             if not self.groups[i]:
-                self.output = np.vstack((self.output[self.timeStep,self.groups[i].ID,0,0,0,0,0]))
+                self.output = np.vstack((self.output[self.timeStep,self.groups[i].ID,0,0,0,0,0,0,0]))
         
         self.timeStep += 1                
                 
@@ -211,8 +221,12 @@ class Lattice(object):
         for i in range(self.size):
             if self.groups[i].size > 0:
                 self.occupied[i] = 1
+                #self.groupID[i] = self.groups[i].ID
+                
             else:
                 self.occupied[i] = 0
+                self.groupID[i] = 9999
+                
             
             
         
