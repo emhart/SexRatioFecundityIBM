@@ -33,9 +33,9 @@ ind_set = {'fecund_genes':[1,2**16]}
 
 
 
-tmp = L.Lattice(dims = [10,5],Kp = [-4.7,.7  ] )
+tmp = L.Lattice(dims = [2,5],Kp = [-4.7,.7  ] )
 
-n_patch = 50
+n_patch = 10
 groups = []
 
 for i in range(n_patch):
