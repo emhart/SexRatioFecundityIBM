@@ -12,14 +12,13 @@ class group(object):
     
     
     '''
-    def __init__(self,indivs,pos,ages={},sex_ratio={},meanFecund = 0,ID = 0,ID_stack=range(1000000),**indiv_dict):
+    def __init__(self,indivs,pos,ages={},sex_ratio={},meanFecund = 0,ID = 0,**indiv_dict):
         self.indivs=indivs
         self.size = len(indivs)
         self.ages = ages
         self.pos = pos   
-        self.ID =          
-        self.IDmax = 0    
-        self.ID_stack = ID_stack
+        self.ID = ID         
+
         ###Reporter data structures. 
         #Actual fecundity
         self.actFecund = []
@@ -30,14 +29,7 @@ class group(object):
         self.actual_FVar = []
         #sex ratio
         self.sex_r = []
-        ##individual associated with each trait
-        #Individual ID
-        #self.IDs
-        #Paternal ID
-        #self.pmIDs
-        #Maternal ID
-        #self.pfIDs
-        
+
         
     def age_count(self):
         '''
@@ -64,26 +56,20 @@ class group(object):
         :modifies: self.genetic_FVar
         :modifies: self.sex_r
         '''
-        sr = []
+        #sr = []
         tf = []
 
         
         for i in range(self.size):
-            sr.append(self.indivs[i].sex[0])
-            tf.append(self.indivs[i].fecund_genes.sum())
+            #sr.append(self.indivs[i].sex[0])
+            gf = np.sum(map(int,bin(self.indivs[i].fecund_genes[0])[2:])) + np.sum(map(int,bin(self.indivs[i].fecund_genes[1])[2:]))
+            tf.append(gf)
            # fr.append(self.indivs[i].food_hist[0])
            # enlev.append(self.indivs[i].energy)
         
         #Set values
-        srcount = Counter(sr)
+        #srcount = Counter(sr)
         tf = np.array(tf)
-        
-        ### Set reporter objects        
-        #self.sex_r = append(srcount.values())
-        #fr = np.array(fr)
-        #enlev = np.array(enlev)
-        #self.meanForage = fr.mean()
-        #self.meanEnergy = enlev.mean()
 
         self.geneticFecund = tf.mean()
         self.genetic_FVar = tf.var()
@@ -98,16 +84,7 @@ class group(object):
         '''
         self.size = len(self.indivs)
         
-    def forage(self,energy):
-        '''
-        Have every individual forage on the patch
-        '''    
-        
-        for x in ran.sample(range(self.size),self.size):
-            energy[self.pos] = self.indivs[x].forage(self.pos,energy)
-        return energy
-            
-    def mate(self,K,ind_set,sizes):
+    def mate(self,K,ind_set):
         ''',
          Description:  Sexual reproduction within the group.  Random mating of all females.  Males can mate
         multiple times, so only one male is needed for all matings.
@@ -123,7 +100,7 @@ class group(object):
         '''
         repro_count_f = np.array([]) #create an index of the number of females that reproduce
         repro_count_m = np.array([]) #create an index of the number of males that reproduce
-        tmp_IDstack = self.ID_stack
+        
         
         off_num = np.array([]) #The actual number of off spring reproduced, returned 
         self.resize()
@@ -140,22 +117,17 @@ class group(object):
 
         
         repro_count_f = repro_count_f.astype(np.int64)
-        
-        #### Code for scramble competition
-        # draw an index
-        #can_rep = np.random.binomial(1,math.exp(-K*self.size),len(repro_count_f))
-        #repro_count_f = repro_count_f[can_rep.astype(bool)]
-        
-        
+            
         repro_count_m = repro_count_m.astype(np.int64)
         
         if len(repro_count_m) > 0:
             for x in repro_count_f:
                 babies = []
                 mating_m = np.random.choice(repro_count_m,1)
-            
-                max_fecund = (np.sum(self.indivs[x].fecund_genes) + np.sum(self.indivs[mating_m].fecund_genes)) /2
-                ### lamda for the poison distribution
+                ### get the fecundity of both sexes
+                f_f = np.sum(map(int,bin(self.indivs[x].fecund_genes[0])[2:])) + np.sum(map(int,bin(self.indivs[x].fecund_genes[1])[2:]))
+                m_f = np.sum(map(int,bin(self.indivs[mating_m].fecund_genes[0])[2:])) + np.sum(map(int,bin(self.indivs[mating_m].fecund_genes[1])[2:]))
+                max_fecund = (f_f+m_f) /2
                 
                 ### Lambda for contest competition
                 lam = max_fecund * math.exp(-K*self.size)
@@ -164,12 +136,10 @@ class group(object):
                 #lam = max_fecund 
                 
                 offspring_size = np.random.poisson(lam)
+                #offspring_size = int(round(lam))
                 
-                ### Testing out if the poisson call is what's causing the mismatch of actual and genetic fecundity
+                ### Testing out if the poisson call is what's causing the mismatch of actual and genetic fecundity                
                 
-                #offspring_size = int(ibm_help.gompertz(max_fecund,b,c,sum(self.indivs[x].food_hist) / len(self.indivs[x].food_hist)))
-                
-                #offspring_size = int(max_fecund)
                 
                 
                 # Keep track of the average number of offspring when females reproduce
@@ -177,9 +147,9 @@ class group(object):
                
                 for i in range(offspring_size):
 
-                    indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':ind_set["energy"],'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'groupID' : 1,'sex' : np.random.binomial(1,.5,1),'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3])),"max_energy": ind_set["max_energy"]}
+                    indiv_dict = {'groupID' : self.ID,'sex': np.random.binomial(1,.5,1)}
     
-                    indiv_dict['fecund_genes'] = np.append(self.indivs[x].create_gametes(sizes),self.indivs[mating_m].create_gametes(sizes),axis=0)
+                    indiv_dict['fecund_genes'] = np.append(self.indivs[x].create_gametes(),self.indivs[mating_m].create_gametes())
                     babies.append(indiv_dict)
             
                 self.indivs[x].pregnant = babies
@@ -187,19 +157,23 @@ class group(object):
         self.resize()   
         if off_num.any():
             self.actFecund = off_num.mean()
-            self.actual_FVar = off_num.var()
+            self.actual_FVar = off_num.size
         elif not off_num.any():
             self.actFecund = 0
             self.actual_FVar = 0
         
     def reproduce(self):
-        
+        '''
+        Description: Create new individuals from a pregnant female.
+        '''
         self.resize()
         
         for x in range(self.size):
             if self.indivs[x].pregnant:
+                surv_p = 
                 for i in self.indivs[x].pregnant:
-                    self.indivs.append(Ind.individual(**i))
+                    if np.random.binomial(1,surv_p,1) == 1:
+                        self.indivs.append(Ind.individual(**i))
                 self.indivs[x].pregnant = []
             self.indivs[x].age += 1
          
@@ -230,10 +204,13 @@ class group(object):
         self.resize()    
 
     def mutate(self,rate):
+        '''
+        Description
+        '''
         for x in self.indivs:
             x.mutate(rate)
                    
-    def disperse(self,K):
+    def disperse(self,K,mult):
         '''
         Description: checks the starving time on each individual and removes those individuals from the current group.  
         :modifies: self.indivs
@@ -241,7 +218,7 @@ class group(object):
         '''
         dispersers = []
         self.resize()
-        nmax = 1 / K
+        nmax = (1 / K) * mult
         if nmax >= self.size:
             return dispersers
     

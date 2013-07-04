@@ -4,7 +4,6 @@
 from ibmsimulation import Lattice as L
 from ibmsimulation import Individual as Ind
 from ibmsimulation import Group as G
-import matplotlib.pyplot as plt
 import numpy as np
 from ibmsimulation import ibm_help as ih
 import sys

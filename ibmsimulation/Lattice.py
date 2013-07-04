@@ -25,7 +25,7 @@ class Lattice(object):
         # Just a t
         self.sizesTup = ((2**0,2**1,2**2,2**3,2**4,2**5,2**6,2**7,2**8,2**9,2**10,2**11,2**12,2**13,2**14,2**15,2**16,2**17,2**18,2**19,2**20,2**21,2**22,2**23,2**24,2**25),((2**1-1,2**2-1,2**3-1,2**4-1,2**5-1,2**6-1,2**7-1,2**8-1,2**9-1,2**10-1,2**11-1,2**12-1,2**13-1,2**14-1,2**15-1,2**16-1,2**17-1,2**18-1,2**19-1,2**20-1,2**21-1,2**22-1,2**23-1,2**24-1,2**25-1)))
         self.Kp = Kp       
-        self.K = np.random.uniform(Kp[0],Kp[1],self.size)
+        self.K = np.random.lognormal(Kp[0],Kp[1],self.size)
         self.Km1 = self.K
         
         
@@ -57,27 +57,12 @@ class Lattice(object):
 
         '''
         self.Km1 = self.K
-        self.K = np.random.uniform(self.Kp[0],self.Kp[1],self.size)
+        self.K = np.random.lognormal(self.Kp[0],self.Kp[1],self.size)
     
-    def disperse(self,migration_p,migration_frac):
-        '''
-        Description: Randomly sort through each group, colonize new patches randomly
-        :param: d_p
-        
-        '''
-        ## Set up index for randomized dispersal
-        self.set_occupied()
-        disp_index = rn.sample(range(self.size),self.size)
-        for x in disp_index:
-            to_disp = self.groups[x].disperse(self.K[x])
-            for i in to_disp:
-                #### Tune dispersal with a simple binomial for now....
-                if np.random.binomial(1,migration_p) == 1: 
-                    self.groups[np.random.randint(0,self.size)].indivs.append(i)
-                    
+    
                     
 
-    def dispersal(self):
+    def dispersal(self,mult):
         '''
         Description: Returns a list of potential dispersers
         :returns dispersers: a dictionary where patch ID is the Key, and the values are a list of dispersers 
@@ -85,14 +70,16 @@ class Lattice(object):
         '''
         dispersers = {}
         for ind, g in enumerate(self.groups):
-            dispersers[self.ID[ind]] = g.disperse(self.Km1[ind])
+            dispersers[self.ID[ind]] = g.disperse(self.Km1[ind],mult)
         return dispersers
         
-    def colonize(self,disp_size = 2, migration_p = 0, migration_frac = .001):
+    def colonize(self,disp_size = 2, migration_p = 0, migration_frac = .001,mult = 1):
         '''
+         Description: a colonization and migration function.  It performs two tasks.  First it allows the colonization of empty sites with a given propagule size.  
+        Also it allows for migration via a migration probability
         '''
         self.set_occupied()
-        to_disp = self.dispersal()
+        to_disp = self.dispersal(mult)
         ## Get the proportion for each dispersal
         disp_numbers = np.array(map(len,to_disp.values()),dtype = np.float64)
         disp_probs = disp_numbers / sum(disp_numbers)
@@ -155,13 +142,11 @@ class Lattice(object):
 
                 
     def mate(self,ind_set):
-        off_num = []
+
         for i in range(self.size):
             if self.groups[i]:
-                off_num.append(self.groups[i].mate(self.K[i],ind_set,self.sizesTup))
-        #remove zero values 
-        off_num = filter (lambda a: a != 0, off_num)
- 
+                self.groups[i].mate(self.K[i],ind_set)
+       
         
     def forage(self):
         for i in range(self.size):

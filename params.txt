@@ -1,6 +1,6 @@
-ngens 100
-x_dim 2
-y_dim 5
-min_pop 0.016
-max_pop 0.01
-min_col_size 1
+ngens 5000
+x_dim 10
+y_dim 10
+min_pop 0.0023
+max_pop 0.0017
+min_col_size 2

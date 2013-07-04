@@ -16,44 +16,48 @@ def test_profile():
 
 
 
-    ind_set = {'fr':[1,1],'m_cost':0,'energy':1,'rep_cost': 0 ,'lifespan':1,'fecund_genes':[0,.5,2,25],'max_energy':10}
+
+    ind_set = {'fecund_genes':[1,2**16]}
 
 
 
-    tmp = L.Lattice(dims = [5,2],Kp = [.01,.02] )
+    tmp = L.Lattice(dims = [5,4],Kp = [.001,.02] )
 
-    n_patch = 10
+    n_patch = 20
     groups = []
 
     for i in range(n_patch):
         z = []
         for x in range(20):
-            indiv_dict = {'forage_rate':np.random.uniform(ind_set["fr"][0],ind_set["fr"][1]),'m_cost':ind_set["m_cost"],'energy':1,'rep_cost':ind_set["rep_cost"],'lifespan':ind_set["lifespan"],'groupID' : 1,'sex' : np.random.binomial(1,.5,1),'fecund_genes':np.random.uniform(ind_set["fecund_genes"][0],ind_set["fecund_genes"][1],(ind_set["fecund_genes"][2],ind_set["fecund_genes"][3])),"max_energy": ind_set["max_energy"]}
+            indiv_dict = {'groupID' : n_patch,'sex' : np.random.binomial(1,.5,1),'fecund_genes':np.random.randint(1,2**3,2)}
             z.append(Ind.individual(**indiv_dict))
     
         groups.append(G.group(z,i,ID=i))
 
     tmp.groups = groups
-    n = 500
-
-
+    n = 100
 
     for x in range(n):
         if x%1 == 0:
             print x
     
-
+    
         tmp.mate(ind_set)
-        #tmp.disperse(.1,True,24)
-        tmp.colonize(10000,1,.01)
+    #tmp.disperse(.1,True,24)
+        tmp.colonize(disp_size = 10,  migration_p  = 0 ,migration_frac=.1)
+ 
         tmp.reproduce()
+
         tmp.senesce(.05)
-        tmp.mutate(0.001)
-        #tmp.forage()
+
+        tmp.mutate(0.1)
         tmp.regenerate()
+    
         tmp.data_collect()
 
     ih.write_ibmdata(tmp)
     print "done"
+
+
 
 cProfile.run('test_profile()')
