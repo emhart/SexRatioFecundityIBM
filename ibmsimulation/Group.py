@@ -2,8 +2,9 @@ from collections import Counter
 import random as ran
 import numpy as np
 from ibmsimulation import Individual as Ind
-from ibmsimulation import ibm_help
-import math 
+from ibmsimulation import ibm_help as ih
+import math
+from scipy import stats 
 
 class group(object):
     '''
@@ -119,9 +120,17 @@ class group(object):
         repro_count_f = repro_count_f.astype(np.int64)
             
         repro_count_m = repro_count_m.astype(np.int64)
-        
+        fem_fit = np.array([])
         if len(repro_count_m) > 0:
+            ### Get relative fitnesses
             for x in repro_count_f:
+                fem_fit = np.append(fem_fit,np.sum(map(int,bin(self.indivs[x].fecund_genes[0])[2:])) + np.sum(map(int,bin(self.indivs[x].fecund_genes[1])[2:])))
+            
+            rel_fit = [ih.holling(5,.7,stats.percentileofscore(fem_fit,i,kind='weak')/100) for i in fem_fit]
+
+            
+            
+            for z,x in enumerate(repro_count_f):
                 babies = []
                 mating_m = np.random.choice(repro_count_m,1)
                 ### get the fecundity of both sexes
@@ -136,6 +145,10 @@ class group(object):
                 #lam = max_fecund 
                 
                 offspring_size = np.random.poisson(lam)
+                
+                ### Now apply a function that influences fitness
+                
+                offspring_size = int(round(offspring_size * rel_fit[z]))
                 #offspring_size = int(round(lam))
                 
                 ### Testing out if the poisson call is what's causing the mismatch of actual and genetic fecundity                
@@ -170,10 +183,8 @@ class group(object):
         
         for x in range(self.size):
             if self.indivs[x].pregnant:
-                surv_p = 
                 for i in self.indivs[x].pregnant:
-                    if np.random.binomial(1,surv_p,1) == 1:
-                        self.indivs.append(Ind.individual(**i))
+                    self.indivs.append(Ind.individual(**i))
                 self.indivs[x].pregnant = []
             self.indivs[x].age += 1
          
